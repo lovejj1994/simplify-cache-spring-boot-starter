@@ -21,6 +21,10 @@ public class RedisMessageListener implements MessageListener {
 
     CacheProviderHolder cacheProviderHolder;
 
+    public RedisMessageListener(CacheProviderHolder cacheProviderHolder) {
+        this.cacheProviderHolder = cacheProviderHolder;
+    }
+
     @Override
     public void onMessage(Message message, byte[] pattern) {
 

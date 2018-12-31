@@ -54,7 +54,7 @@ public class RedisCache implements SecondCache {
     private final String redisTopicPut = "redisCache:putTopic:";
     private final String redisTopicDelete = "redisCache:deleteTopic:";
 
-    private MessageListenerAdapter messageListenerAdapter;
+//    private MessageListenerAdapter messageListenerAdapter;
 
     /**
      * @param redisTemplate
@@ -68,8 +68,8 @@ public class RedisCache implements SecondCache {
         this.region = region;
         this.namespace = namespace;
         this.expire = expire;
-        this.messageListenerAdapter = new MessageListenerAdapter(new RedisMessageListener());
-        RedisMessageListenerContainer redisMessageListenerContainer = new RedisMessageListenerContainer();
+//        this.messageListenerAdapter = new MessageListenerAdapter(new RedisMessageListener());
+//        RedisMessageListenerContainer redisMessageListenerContainer = new RedisMessageListenerContainer();
     }
 
     @Override
