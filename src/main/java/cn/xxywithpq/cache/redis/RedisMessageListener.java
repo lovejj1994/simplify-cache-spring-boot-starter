@@ -31,13 +31,13 @@ public class RedisMessageListener implements MessageListener {
         String channel = new String(message.getChannel());
         String body = new String(message.getBody());
         if (channel.startsWith(REDIS_TOPIC_PUT)) {
-            String region = channel.substring(channel.indexOf(REDIS_TOPIC_PUT));
+            String region = channel.substring(REDIS_TOPIC_PUT.length());
             log.info("RedisCache first cache put listener begin channel:{} key:{}", channel, message);
             JSONObject jsonObject = JSONObject.parseObject(body);
             Object result = cacheProviderHolder.getFirstProvider(region).put(jsonObject.getString(CommonConstants.JSON_KEY), jsonObject.getString(CommonConstants.JSON_VALUE));
             log.info("RedisCache first cache put listener result channel:{}  key:{} result:{}", channel, message, result);
         } else if (channel.startsWith(REDIS_TOPIC_DELETE)) {
-            String region = channel.substring(channel.indexOf(REDIS_TOPIC_DELETE));
+            String region = channel.substring(REDIS_TOPIC_DELETE.length());
             log.info("RedisCache first cache delete listener begin channel:{}  key:{}", channel, message);
             Object result = cacheProviderHolder.getFirstProvider(region).delete(body);
             log.info("RedisCache first cache delete listener result channel:{} key:{} result:{}", channel, message, result);

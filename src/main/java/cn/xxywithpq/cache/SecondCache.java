@@ -1,12 +1,10 @@
 package cn.xxywithpq.cache;
 
 
-import cn.xxywithpq.cache.listener.CacheListener;
-
 /**
  * 二级缓存行为接口
  */
-public interface SecondCache extends Cache, CacheListener {
+public interface SecondCache extends Cache {
 
 
     /**

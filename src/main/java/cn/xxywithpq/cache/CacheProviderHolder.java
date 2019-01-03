@@ -16,10 +16,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CacheProviderHolder {
+    private static CacheProviderHolder instance = new CacheProviderHolder();
     private FirstCacheProvider firstCacheProvider;
     private SecondCacheProvider secondCacheProvider;
-
-    private static CacheProviderHolder instance = new CacheProviderHolder();
 
     private CacheProviderHolder() {
     }
@@ -70,10 +69,8 @@ public class CacheProviderHolder {
             }
         }
 
-        FirstCache firstCache = this.addFirstCache(firstCacheConfig);
-        SecondCache secondCache = this.addSecondCache(secondCacheConfig);
-        secondCache.initClearFirstCacheListener(firstCache);
-        secondCache.initPutFirstCacheListener(firstCache);
+        this.addFirstCache(firstCacheConfig);
+        this.addSecondCache(secondCacheConfig);
     }
 
     @Override
@@ -83,5 +80,4 @@ public class CacheProviderHolder {
                 ", secondCacheProvider=" + secondCacheProvider +
                 '}';
     }
-
 }

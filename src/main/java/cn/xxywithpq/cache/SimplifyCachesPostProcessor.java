@@ -2,11 +2,11 @@ package cn.xxywithpq.cache;
 
 import cn.xxywithpq.cache.caffeine.CaffeineConfig;
 import cn.xxywithpq.cache.config.Config;
+import cn.xxywithpq.cache.config.FirstCacheConfig;
 import cn.xxywithpq.cache.redis.RedisConfig;
 import cn.xxywithpq.cache.redis.RedisMessageListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -17,13 +17,12 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static cn.xxywithpq.cache.constants.CommonConstants.*;
 
@@ -31,20 +30,6 @@ import static cn.xxywithpq.cache.constants.CommonConstants.*;
 @Component
 @Slf4j
 public class SimplifyCachesPostProcessor implements BeanPostProcessor, EnvironmentAware {
-
-    private Environment environment;
-
-    @Autowired
-    RedissonClient redissonClient;
-
-    @Autowired
-    RedisTemplate redisTemplate;
-
-    @Autowired
-    RedisConnectionFactory connectionFactory;
-
-    @Autowired
-    RedisMessageListenerContainer redisMessageListenerContainer;
 
     private static final ConfigurationPropertyName CONFIG_REGION_PREFIX = ConfigurationPropertyName
             .of("simplify.cache.region");
@@ -56,15 +41,28 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
             .mapOf(String.class, Object.class);
     private static final Bindable<String> STRING = Bindable
             .of(String.class);
+    //    @Autowired
+//    RedissonClient redissonClient;
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    RedisConnectionFactory connectionFactory;
+    @Autowired
+    RedisMessageListenerContainer redisMessageListenerContainer;
 
+    private Environment environment;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         if (bean instanceof CachesJsonUtil) {
             log.info("SimplifyCaches init begin");
-            if (null == redissonClient) {
+            if (null == stringRedisTemplate) {
                 throw new RuntimeException("redissonClient null ,初始化失败");
             }
+//            FastJsonRedisSerializer<Object> jsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
+//            redisTemplate.setKeySerializer(jsonRedisSerializer);
+//            redisTemplate.setValueSerializer(jsonRedisSerializer);
+
             CacheProviderHolder cacheProviderHolder = CacheProviderHolder.getInstance();
             String namespace;
             String region = DEFAULT_REGION;
@@ -88,7 +86,8 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
 
             CaffeineConfig firstCacheConfig = new CaffeineConfig();
             RedisConfig secondCacheConfig = new RedisConfig();
-
+//            需要监听的topic列表
+            List<ChannelTopic> channelTopics = new ArrayList<>();
             //从配置文件查找region
             Map<String, Object> regions = binder.bind(CONFIG_REGION_PREFIX, Bindable.mapOf(String.class, Object.class)).orElseGet(Collections::emptyMap);
             if (!regions.isEmpty()) {
@@ -97,7 +96,7 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
                     secondCacheConfig = new RedisConfig();
                     firstCacheConfig.setNamespace(namespace);
                     secondCacheConfig.setNamespace(namespace);
-                    secondCacheConfig.setRedissonClient(redissonClient);
+                    secondCacheConfig.setRedisTemplate(stringRedisTemplate);
 
                     log.info("regions.getKey() {} , regions.getValue().toString() {}", entry.getKey(), entry.getValue().toString());
                     String key = entry.getKey();
@@ -134,8 +133,8 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
                     Config config = new Config();
                     config.setFirstCacheConfig(firstCacheConfig);
                     config.setSecondCacheConfig(secondCacheConfig);
-
                     cacheProviderHolder.init(config);
+                    addListener(channelTopics, config);
                 }
 //                region没有指定，用默认值
             } else {
@@ -149,12 +148,19 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
                 config.setFirstCacheConfig(firstCacheConfig);
                 config.setSecondCacheConfig(secondCacheConfig);
                 cacheProviderHolder.init(config);
+
+                addListener(channelTopics, config);
             }
             CachesJsonUtil cachesJsonUtil = (CachesJsonUtil) bean;
             cachesJsonUtil.setCacheProviderHolder(cacheProviderHolder);
-            ChannelTopic channelTopic = new ChannelTopic("");
-            redisMessageListenerContainer.setMessageListeners(new RedisMessageListener(cacheProviderHolder),);
+
+//            初始化监听
+            Map listenerParams = new HashMap(1);
+            log.info("SimplifyCaches channelTopics:{}", channelTopics);
+            listenerParams.put(new RedisMessageListener(cacheProviderHolder), channelTopics);
+            redisMessageListenerContainer.setMessageListeners(listenerParams);
             cachesJsonUtil.setNamespace(namespace);
+
             log.info("SimplifyCaches init done:{}", bean);
         }
         return bean;
@@ -175,5 +181,19 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
         RedisMessageListenerContainer redisMessageListenerContainer = new RedisMessageListenerContainer();
         redisMessageListenerContainer.setConnectionFactory(connectionFactory);
         return redisMessageListenerContainer;
+    }
+
+    /**
+     * 收集监听列表
+     *
+     * @param channelTopics
+     * @param config
+     */
+    private void addListener(List<ChannelTopic> channelTopics, Config config) {
+        FirstCacheConfig firstCacheConfig = config.getFirstCacheConfig();
+        ChannelTopic putChannelTopic = new ChannelTopic(REDIS_TOPIC_PUT + firstCacheConfig.getNamespace() + ":" + firstCacheConfig.getRegion());
+        ChannelTopic deleteChannelTopic = new ChannelTopic(REDIS_TOPIC_DELETE + firstCacheConfig.getNamespace() + ":" + firstCacheConfig.getRegion());
+        channelTopics.add(putChannelTopic);
+        channelTopics.add(deleteChannelTopic);
     }
 }
