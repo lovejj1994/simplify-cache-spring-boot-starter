@@ -10,9 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties
 public class SimplifyCacheApplication {
 
-    @Autowired
-    RedisProperties redisProperties;
-
     public static void main(String[] args) {
         SpringApplication.run(SimplifyCacheApplication.class, args);
     }
