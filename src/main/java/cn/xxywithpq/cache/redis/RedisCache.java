@@ -20,7 +20,6 @@ import cn.xxywithpq.cache.constants.CommonConstants;
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
@@ -38,14 +37,11 @@ import static cn.xxywithpq.cache.constants.CommonConstants.REDIS_TOPIC_PUT;
 @Slf4j
 public class RedisCache implements SecondCache {
 
-    private RedissonClient redissonClient;
     private RedisTemplate redisTemplate;
     private ValueOperations<String, String> valueOperations;
     private Long expire;
     private String region;
     private String namespace;
-
-//    private MessageListenerAdapter messageListenerAdapter;
 
     /**
      * @param redisTemplate
