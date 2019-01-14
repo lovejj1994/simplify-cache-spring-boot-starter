@@ -10,9 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.context.properties.bind.Bindable;
-import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -22,7 +20,10 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static cn.xxywithpq.cache.constants.CommonConstants.*;
 
@@ -31,16 +32,13 @@ import static cn.xxywithpq.cache.constants.CommonConstants.*;
 @Slf4j
 public class SimplifyCachesPostProcessor implements BeanPostProcessor, EnvironmentAware {
 
-    private static final ConfigurationPropertyName CONFIG_REGION_PREFIX = ConfigurationPropertyName
-            .of("simplify.cache.region");
-    private static final ConfigurationPropertyName CONFIG_NAMESPACE_PREFIX = ConfigurationPropertyName
-            .of("simplify.cache.namespace");
-    private static final ConfigurationPropertyName CONFIG_SYNC_REDIS_TTL_PREFIX = ConfigurationPropertyName
-            .of("simplify.cache.sync-redis-ttl");
-    private static final Bindable<Map<String, Object>> STRING_OBJECT_MAP = Bindable
-            .mapOf(String.class, Object.class);
-    private static final Bindable<String> STRING = Bindable
-            .of(String.class);
+    private static final String CONFIG_REGION_PREFIX = "simplify.cache.region";
+    private static final String CONFIG_NAMESPACE_PREFIX = "simplify.cache.namespace";
+    private static final String CONFIG_SYNC_REDIS_TTL_PREFIX = "simplify.cache.sync-redis-ttl";
+    //    private static final Bindable<Map<String, Object>> STRING_OBJECT_MAP = Bindable
+//            .mapOf(String.class, Object.class);
+//    private static final Bindable<String> STRING = Bindable
+//            .of(String.class);
     //    @Autowired
 //    RedissonClient redissonClient;
     @Autowired
@@ -68,15 +66,16 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
             String region = DEFAULT_REGION;
 
 //            Spring boot 2以下用 RelaxedPropertyResolver绑定
-//            RelaxedPropertyResolver relaxedPropertyResolver = new RelaxedPropertyResolver(environment);
-            Binder binder = Binder.get(environment);
+            RelaxedPropertyResolver relaxedPropertyResolver = new RelaxedPropertyResolver(environment);
+//            Binder binder = Binder.get(environment);
             //从配置文件查找namespace
-//            Map<String, Object> namespaces = relaxedPropertyResolver.getSubProperties(CONFIG_NAMESPACE_PREFIX);
-            namespace = binder.bind(CONFIG_NAMESPACE_PREFIX, STRING).orElse(DEFAULT_NAMESPACE);
+            namespace = relaxedPropertyResolver.getProperty(CONFIG_NAMESPACE_PREFIX);
+//            namespace = binder.bind(CONFIG_NAMESPACE_PREFIX, STRING).orElse(DEFAULT_NAMESPACE);
             log.info("namespace {}", namespace);
 
 
-            Map<String, Object> ttl = binder.bind(CONFIG_SYNC_REDIS_TTL_PREFIX, STRING_OBJECT_MAP).orElseGet(Collections::emptyMap);
+            Map<String, Object> ttl = relaxedPropertyResolver.getSubProperties(CONFIG_SYNC_REDIS_TTL_PREFIX);
+//            Map<String, Object> ttl = binder.bind(CONFIG_SYNC_REDIS_TTL_PREFIX, STRING_OBJECT_MAP).orElseGet(Collections::emptyMap);
             if (!ttl.isEmpty()) {
                 for (Map.Entry<String, Object> entry : ttl.entrySet()) {
                     log.info("ttl.getKey() {} , ttl.getValue().toString() {}", entry.getKey(), entry.getValue().toString());
@@ -89,7 +88,8 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
 //            需要监听的topic列表
             List<ChannelTopic> channelTopics = new ArrayList<>();
             //从配置文件查找region
-            Map<String, Object> regions = binder.bind(CONFIG_REGION_PREFIX, Bindable.mapOf(String.class, Object.class)).orElseGet(Collections::emptyMap);
+            Map<String, Object> regions = relaxedPropertyResolver.getSubProperties(CONFIG_REGION_PREFIX);
+//            Map<String, Object> regions = binder.bind(CONFIG_REGION_PREFIX, Bindable.mapOf(String.class, Object.class)).orElseGet(Collections::emptyMap);
             if (!regions.isEmpty()) {
                 for (Map.Entry<String, Object> entry : regions.entrySet()) {
                     firstCacheConfig = new CaffeineConfig();

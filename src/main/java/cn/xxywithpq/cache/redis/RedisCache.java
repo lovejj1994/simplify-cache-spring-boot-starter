@@ -69,8 +69,8 @@ public class RedisCache implements SecondCache {
 
     @Override
     public Object delete(String key) {
-        Boolean delete = this.redisTemplate.delete(key(key));
-        return delete;
+        this.redisTemplate.delete(key(key));
+        return null;
     }
 
     @Override
