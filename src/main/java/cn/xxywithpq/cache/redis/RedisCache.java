@@ -90,7 +90,7 @@ public class RedisCache implements SecondCache {
 
     @Override
     public void syncDeleteFirstCache(String region, String key) {
-        redisTemplate.convertAndSend(REDIS_TOPIC_DELETE + this.namespace + ":" + region, key(key));
+        redisTemplate.convertAndSend(REDIS_TOPIC_DELETE + this.namespace + ":" + region, key);
         log.info("syncDeleteFirstCache,namespace:{} region:{} key:{}", this.namespace, region, key);
     }
 
