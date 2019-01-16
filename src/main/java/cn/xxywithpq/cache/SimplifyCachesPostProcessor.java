@@ -32,9 +32,9 @@ import static cn.xxywithpq.cache.constants.CommonConstants.*;
 @Slf4j
 public class SimplifyCachesPostProcessor implements BeanPostProcessor, EnvironmentAware {
 
-    private static final String CONFIG_REGION_PREFIX = "simplify.cache.region";
+    private static final String CONFIG_REGION_PREFIX = "simplify.cache.region.";
     private static final String CONFIG_NAMESPACE_PREFIX = "simplify.cache.namespace";
-    private static final String CONFIG_SYNC_REDIS_TTL_PREFIX = "simplify.cache.sync-redis-ttl";
+    private static final String CONFIG_SYNC_REDIS_TTL_PREFIX = "simplify.cache.sync-redis-ttl.";
     //    private static final Bindable<Map<String, Object>> STRING_OBJECT_MAP = Bindable
 //            .mapOf(String.class, Object.class);
 //    private static final Bindable<String> STRING = Bindable
