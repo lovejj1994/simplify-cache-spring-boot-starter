@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.Objects;
 
 
@@ -41,7 +42,7 @@ public class CachesJsonUtil {
                 if (!Objects.isNull(obj)) {
                     log.info("二级缓存命中 region {} key {} value {}", region, key, obj);
                     String json = (String) obj;
-                    cacheProviderHolder.getSecondProvider(name(namespace, region)).syncPutFirstCacheJson(region, key, json);
+                    cacheProviderHolder.getSecondProvider(name(namespace, region)).syncPutFirstCacheJson(key, json);
                     return JSON.parseObject(json, clazz);
                 }
             }
@@ -58,7 +59,7 @@ public class CachesJsonUtil {
                 return;
             }
             cacheProviderHolder.getSecondProvider(name(this.namespace, region)).delete(key);
-            cacheProviderHolder.getSecondProvider(name(this.namespace, region)).syncDeleteFirstCache(region, key);
+            cacheProviderHolder.getSecondProvider(name(this.namespace, region)).syncDeleteFirstCache(key);
         } catch (Exception e) {
             log.warn("SecondLevelCacheUtil delete e={}", e);
         }
@@ -69,7 +70,7 @@ public class CachesJsonUtil {
             if (StringUtils.isNotBlank(key) && !Objects.isNull(value)) {
                 String valueStr = JSONObject.toJSONString(value);
                 cacheProviderHolder.getSecondProvider(name(this.namespace, region)).put(key, valueStr);
-                cacheProviderHolder.getSecondProvider(name(this.namespace, region)).syncPutFirstCacheJson(region, key, valueStr);
+                cacheProviderHolder.getSecondProvider(name(this.namespace, region)).syncPutFirstCacheJson(key, valueStr);
             }
         } catch (Exception e) {
             log.warn("SecondLevelCacheUtil set e={}", e);
@@ -82,6 +83,9 @@ public class CachesJsonUtil {
         }
     }
 
+    public Boolean resetTtl(String region, String key, Date date) {
+        return cacheProviderHolder.getSecondProvider(name(this.namespace, region)).resetTtl(key, date);
+    }
 
     private String name(String namespace, String region) {
         return namespace + ":" + region;

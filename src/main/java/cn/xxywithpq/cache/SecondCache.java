@@ -1,6 +1,8 @@
 package cn.xxywithpq.cache;
 
 
+import java.util.Date;
+
 /**
  * 二级缓存行为接口
  */
@@ -12,14 +14,19 @@ public interface SecondCache extends Cache {
      *
      * @return
      */
-    void syncPutFirstCacheJson(String region, String key, String valueStr);
+    void syncPutFirstCacheJson(String key, String valueStr);
 
     /**
      * 同步数据到一级cache -- 删除行为
      *
      * @return
      */
-    void syncDeleteFirstCache(String region, String key);
+    void syncDeleteFirstCache(String key);
 
-
+    /**
+     * 重置ttl时间
+     *
+     * @return
+     */
+    Boolean resetTtl(String key, Date date);
 }

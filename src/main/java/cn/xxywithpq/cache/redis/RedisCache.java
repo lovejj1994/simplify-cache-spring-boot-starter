@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static cn.xxywithpq.cache.constants.CommonConstants.REDIS_TOPIC_DELETE;
@@ -80,18 +81,23 @@ public class RedisCache implements SecondCache {
     }
 
     @Override
-    public void syncPutFirstCacheJson(String region, String key, String valueStr) {
+    public void syncPutFirstCacheJson(String key, String valueStr) {
         JSONObject message = new JSONObject(2);
         message.put(CommonConstants.JSON_KEY, key);
         message.put(CommonConstants.JSON_VALUE, valueStr);
-        redisTemplate.convertAndSend(REDIS_TOPIC_PUT + this.namespace + ":" + region, message.toJSONString());
-        log.info("syncFirstCacheJson, namespace:{} region:{} key: {} value: {}", this.namespace, region, key, valueStr);
+        redisTemplate.convertAndSend(REDIS_TOPIC_PUT + this.namespace + ":" + this.region, message.toJSONString());
+        log.info("syncFirstCacheJson, namespace:{} region:{} key: {} value: {}", this.namespace, this.region, key, valueStr);
     }
 
     @Override
-    public void syncDeleteFirstCache(String region, String key) {
-        redisTemplate.convertAndSend(REDIS_TOPIC_DELETE + this.namespace + ":" + region, key);
-        log.info("syncDeleteFirstCache,namespace:{} region:{} key:{}", this.namespace, region, key);
+    public void syncDeleteFirstCache(String key) {
+        redisTemplate.convertAndSend(REDIS_TOPIC_DELETE + this.namespace + ":" + this.region, key);
+        log.info("syncDeleteFirstCache,namespace:{} region:{} key:{}", this.namespace, this.region, key);
+    }
+
+    @Override
+    public Boolean resetTtl(String key, Date date) {
+        return this.redisTemplate.expireAt(key(key), date);
     }
 
     @Override
