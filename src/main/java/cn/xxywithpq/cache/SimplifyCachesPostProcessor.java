@@ -57,9 +57,6 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
             if (null == stringRedisTemplate) {
                 throw new RuntimeException("redissonClient null ,初始化失败");
             }
-//            FastJsonRedisSerializer<Object> jsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
-//            redisTemplate.setKeySerializer(jsonRedisSerializer);
-//            redisTemplate.setValueSerializer(jsonRedisSerializer);
 
             CacheProviderHolder cacheProviderHolder = CacheProviderHolder.getInstance();
             String namespace;
@@ -67,21 +64,17 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
 
 //            Spring boot 2以下用 RelaxedPropertyResolver绑定
             RelaxedPropertyResolver relaxedPropertyResolver = new RelaxedPropertyResolver(environment);
-//            Binder binder = Binder.get(environment);
             //从配置文件查找namespace
             namespace = relaxedPropertyResolver.getProperty(CONFIG_NAMESPACE_PREFIX);
-//            namespace = binder.bind(CONFIG_NAMESPACE_PREFIX, STRING).orElse(DEFAULT_NAMESPACE);
             log.info("namespace {}", namespace);
 
 
             Map<String, Object> ttl = relaxedPropertyResolver.getSubProperties(CONFIG_SYNC_REDIS_TTL_PREFIX);
-//            Map<String, Object> ttl = binder.bind(CONFIG_SYNC_REDIS_TTL_PREFIX, STRING_OBJECT_MAP).orElseGet(Collections::emptyMap);
             if (!ttl.isEmpty()) {
                 for (Map.Entry<String, Object> entry : ttl.entrySet()) {
                     log.info("ttl.getKey() {} , ttl.getValue().toString() {}", entry.getKey(), entry.getValue().toString());
                 }
             }
-
 
             CaffeineConfig firstCacheConfig = new CaffeineConfig();
             RedisConfig secondCacheConfig = new RedisConfig();
@@ -89,7 +82,6 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
             List<ChannelTopic> channelTopics = new ArrayList<>();
             //从配置文件查找region
             Map<String, Object> regions = relaxedPropertyResolver.getSubProperties(CONFIG_REGION_PREFIX);
-//            Map<String, Object> regions = binder.bind(CONFIG_REGION_PREFIX, Bindable.mapOf(String.class, Object.class)).orElseGet(Collections::emptyMap);
             if (!regions.isEmpty()) {
                 for (Map.Entry<String, Object> entry : regions.entrySet()) {
                     firstCacheConfig = new CaffeineConfig();
