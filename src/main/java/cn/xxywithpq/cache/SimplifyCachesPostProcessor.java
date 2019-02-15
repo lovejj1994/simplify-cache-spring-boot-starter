@@ -53,6 +53,7 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         if (bean instanceof CachesJsonUtil) {
+            long start = System.currentTimeMillis();
             log.info("SimplifyCaches init begin");
             if (null == stringRedisTemplate) {
                 throw new RuntimeException("redissonClient null ,初始化失败");
@@ -153,7 +154,7 @@ public class SimplifyCachesPostProcessor implements BeanPostProcessor, Environme
             redisMessageListenerContainer.setMessageListeners(listenerParams);
             cachesJsonUtil.setNamespace(namespace);
 
-            log.info("SimplifyCaches init done:{}", bean);
+            log.info("SimplifyCaches init done:{} , last {} ms", bean, System.currentTimeMillis() - start);
         }
         return bean;
     }
