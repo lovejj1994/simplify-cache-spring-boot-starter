@@ -1,6 +1,15 @@
 # simplify-cache-spring-boot-starter
 提供一个二级缓存组件 for spring boot，第一级为 caffeine ，第二级为 redis
 
+Maven:
+```
+<dependency>
+  <groupId>cn.xxywithpq</groupId>
+  <artifactId>simplify-cache-spring-boot-starter</artifactId>
+  <version>spring-boot-1.5-1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
 测试web项目在
 [simplify-cache-spring-boot-starter-test](https://github.com/lovejj1994/simplify-cache-spring-boot-starter-test) 
 
