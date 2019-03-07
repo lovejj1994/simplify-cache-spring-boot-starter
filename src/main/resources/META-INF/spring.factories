@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-cn.xxywithpq.cache.CachesJsonUtil,\
-cn.xxywithpq.cache.SimplifyCachesPostProcessor
+cn.xxywithpq.cache.CachesJsonUtilFactoryBean
