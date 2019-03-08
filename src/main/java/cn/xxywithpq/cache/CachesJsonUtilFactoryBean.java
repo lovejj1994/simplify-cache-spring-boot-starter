@@ -35,8 +35,8 @@ public class CachesJsonUtilFactoryBean implements FactoryBean<CachesJsonUtil>, E
     StringRedisTemplate stringRedisTemplate;
     @Autowired
     RedisConnectionFactory connectionFactory;
-//    @Autowired
-//    RedisMessageListenerContainer redisMessageListenerContainer;
+    @Autowired
+    RedisMessageListenerContainer redisMessageListenerContainer;
 
     private Environment environment;
 
@@ -141,10 +141,7 @@ public class CachesJsonUtilFactoryBean implements FactoryBean<CachesJsonUtil>, E
         cachesJsonUtil.setCacheProviderHolder(cacheProviderHolder);
 
 //            初始化监听
-        Map listenerParams = new HashMap(1);
-        log.info("SimplifyCaches channelTopics:{}", channelTopics);
-        listenerParams.put(new RedisMessageListener(cacheProviderHolder), channelTopics);
-        initRedisMessageListenerContainer(listenerParams);
+        initRedisMessageListenerContainer(channelTopics, new RedisMessageListener(cacheProviderHolder));
 
         cachesJsonUtil.setNamespace(namespace);
 
@@ -184,9 +181,11 @@ public class CachesJsonUtilFactoryBean implements FactoryBean<CachesJsonUtil>, E
     }
 
 
-    private void initRedisMessageListenerContainer(Map listenerParams) {
-        RedisMessageListenerContainer redisMessageListenerContainer = new RedisMessageListenerContainer();
-        redisMessageListenerContainer.setConnectionFactory(connectionFactory);
+    private void initRedisMessageListenerContainer(List<ChannelTopic> channelTopics, RedisMessageListener redisMessageListener) {
+        Map listenerParams = new HashMap(1);
+        log.info("SimplifyCaches channelTopics:{}", channelTopics);
+        listenerParams.put(redisMessageListener, channelTopics);
+
         redisMessageListenerContainer.setMessageListeners(listenerParams);
         redisMessageListenerContainer.afterPropertiesSet();
         redisMessageListenerContainer.start();
